@@ -8,7 +8,7 @@ import (
 )
 
 // startRepl reads commands from stdin until the process is interrupted.
-func startRepl() {
+func startRepl(cfg *config) {
 	scanner := bufio.NewScanner(os.Stdin)
 
 	for {
@@ -22,13 +22,13 @@ func startRepl() {
 
 		commandName := words[0]
 
-		command, ok := getCommands()[commandName]
+		command, ok := cfg.commands[commandName]
 		if !ok {
 			fmt.Println("Unknown command")
 			continue
 		}
 
-		if err := command.callback(); err != nil {
+		if err := command.callback(cfg); err != nil {
 			fmt.Println(err)
 		}
 	}
@@ -37,12 +37,8 @@ func startRepl() {
 type cliCommand struct {
 	name        string
 	description string
-	callback    func() error
+	callback    func(*config) error
 }
-
-// commandOrder fixes the display order for help. Go randomizes map iteration,
-// so the registry alone can't produce stable output.
-var commandOrder = []string{"help", "exit"}
 
 func getCommands() map[string]cliCommand {
 	return map[string]cliCommand{
