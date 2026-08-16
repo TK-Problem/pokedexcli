@@ -2,7 +2,7 @@ package main
 
 import "fmt"
 
-func commandMap(cfg *config) error {
+func commandMap(cfg *config, args []string) error {
 	if cfg.nextLocationsURL == nil {
 		fmt.Println("you're on the last page")
 		return nil
