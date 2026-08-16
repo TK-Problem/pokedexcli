@@ -13,7 +13,7 @@ func commandMap(cfg *config) error {
 // showLocationAreas fetches one page of location areas, advances both
 // pagination cursors, and prints the area names.
 func showLocationAreas(cfg *config, pageURL string) error {
-	resp, err := cfg.pokeapiClient.ListLocationAreas(pageURL)
+	resp, err := cfg.pokeapiClient.ListLocations(&pageURL)
 	if err != nil {
 		return err
 	}

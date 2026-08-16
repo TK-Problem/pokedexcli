@@ -7,9 +7,9 @@ import (
 	"net/http"
 )
 
-// LocationAreasResp is one page of the location-area listing. Next and Previous
-// are null at the last and first page respectively, hence *string.
-type LocationAreasResp struct {
+// RespShallowLocations is one page of the location-area listing. Next and
+// Previous are null at the last and first page respectively, hence *string.
+type RespShallowLocations struct {
 	Count    int     `json:"count"`
 	Next     *string `json:"next"`
 	Previous *string `json:"previous"`
@@ -19,32 +19,49 @@ type LocationAreasResp struct {
 	} `json:"results"`
 }
 
-// ListLocationAreas fetches a single page of location areas.
-func (c *Client) ListLocationAreas(pageURL string) (LocationAreasResp, error) {
-	req, err := http.NewRequest("GET", pageURL, nil)
+// ListLocations -
+func (c *Client) ListLocations(pageURL *string) (RespShallowLocations, error) {
+	url := LocationAreasURL
+	if pageURL != nil {
+		url = *pageURL
+	}
+
+	if val, ok := c.cache.Get(url); ok {
+		locationsResp := RespShallowLocations{}
+		err := json.Unmarshal(val, &locationsResp)
+		if err != nil {
+			return RespShallowLocations{}, err
+		}
+
+		return locationsResp, nil
+	}
+
+	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return LocationAreasResp{}, err
+		return RespShallowLocations{}, err
 	}
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		return LocationAreasResp{}, err
+		return RespShallowLocations{}, err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode > 299 {
-		return LocationAreasResp{}, fmt.Errorf("bad status code: %d", resp.StatusCode)
+		return RespShallowLocations{}, fmt.Errorf("bad status code: %d", resp.StatusCode)
 	}
 
 	dat, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return LocationAreasResp{}, err
+		return RespShallowLocations{}, err
 	}
 
-	locationAreas := LocationAreasResp{}
-	if err := json.Unmarshal(dat, &locationAreas); err != nil {
-		return LocationAreasResp{}, err
+	locationsResp := RespShallowLocations{}
+	err = json.Unmarshal(dat, &locationsResp)
+	if err != nil {
+		return RespShallowLocations{}, err
 	}
 
-	return locationAreas, nil
+	c.cache.Add(url, dat)
+	return locationsResp, nil
 }
