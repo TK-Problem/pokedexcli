@@ -12,4 +12,7 @@ type config struct {
 	// is nil on the first page.
 	nextLocationsURL *string
 	prevLocationsURL *string
+
+	// caughtPokemon is the user's pokedex, keyed by pokemon name.
+	caughtPokemon map[string]pokeapi.Pokemon
 }
